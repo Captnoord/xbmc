@@ -23,6 +23,7 @@
 #include "settings/DisplaySettings.h"
 #include "settings/Settings.h"
 #include "settings/GUISettings.h"
+#include "utils/StringUtils.h"
 
 using namespace std;
 
@@ -68,11 +69,11 @@ void CWinSystemBase::UpdateDesktopResolution(RESOLUTION_INFO& newRes, int screen
   newRes.iHeight = height;
   newRes.iScreenWidth = width;
   newRes.iScreenHeight = height;
-  newRes.strMode.Format("%dx%d", width, height);
+  newRes.strMode = StringUtils::Format("%dx%d", width, height);
   if (refreshRate > 1)
-    newRes.strMode.Format("%s @ %.2f%s - Full Screen", newRes.strMode, refreshRate, dwFlags & D3DPRESENTFLAG_INTERLACED ? "i" : "");
+    newRes.strMode = StringUtils::Format("%s @ %.2f%s - Full Screen", newRes.strMode.c_str(), refreshRate, dwFlags & D3DPRESENTFLAG_INTERLACED ? "i" : "");
   if (screen > 0)
-    newRes.strMode.Format("%s #%d", newRes.strMode, screen + 1);
+    newRes.strMode = StringUtils::Format("%s #%d", newRes.strMode.c_str(), screen + 1);
 }
 
 void CWinSystemBase::UpdateResolutions()

@@ -57,10 +57,10 @@ CSkinInfo::CSkinInfo(const cp_extension_t *ext)
       int width = atoi(CAddonMgr::Get().GetExtValue(*i, "@width"));
       int height = atoi(CAddonMgr::Get().GetExtValue(*i, "@height"));
       bool defRes = CAddonMgr::Get().GetExtValue(*i, "@default").Equals("true");
-      CStdString folder = CAddonMgr::Get().GetExtValue(*i, "@folder");
+      std::string folder = CAddonMgr::Get().GetExtValue(*i, "@folder");
       float aspect = 0;
-      CStdStringArray fracs;
-      CStdString strAspect = CAddonMgr::Get().GetExtValue(*i, "@aspect");
+      std::vector<std::string> fracs;
+      std::string strAspect = CAddonMgr::Get().GetExtValue(*i, "@aspect");
       StringUtils::SplitString(strAspect, ":", fracs);
       if (fracs.size() == 2)
         aspect = (float)(atof(fracs[0].c_str())/atof(fracs[1].c_str()));
@@ -76,14 +76,14 @@ CSkinInfo::CSkinInfo(const cp_extension_t *ext)
   }
   else
   { // no resolutions specified -> backward compatibility
-    CStdString defaultWide = CAddonMgr::Get().GetExtValue(ext->configuration, "@defaultwideresolution");
-    if (defaultWide.IsEmpty())
+    std::string defaultWide = CAddonMgr::Get().GetExtValue(ext->configuration, "@defaultwideresolution");
+    if (defaultWide.empty())
       defaultWide = CAddonMgr::Get().GetExtValue(ext->configuration, "@defaultresolution");
     TranslateResolution(defaultWide, m_defaultRes);
   }
 
-  CStdString str = CAddonMgr::Get().GetExtValue(ext->configuration, "@effectslowdown");
-  if (!str.IsEmpty())
+  std::string str = CAddonMgr::Get().GetExtValue(ext->configuration, "@effectslowdown");
+  if (!str.empty())
     m_effectsSlowDown = (float)atof(str.c_str());
   else
     m_effectsSlowDown = 1.f;
@@ -138,13 +138,13 @@ void CSkinInfo::Start()
   }
 }
 
-CStdString CSkinInfo::GetSkinPath(const CStdString& strFile, RESOLUTION_INFO *res, const CStdString& strBaseDir /* = "" */) const
+std::string CSkinInfo::GetSkinPath(const std::string& strFile, RESOLUTION_INFO *res, const std::string& strBaseDir /* = "" */) const
 {
   if (m_resolutions.empty())
     return ""; // invalid skin
 
-  CStdString strPathToUse = Path();
-  if (!strBaseDir.IsEmpty())
+  std::string strPathToUse = Path();
+  if (!strBaseDir.empty())
     strPathToUse = strBaseDir;
 
   // if the caller doesn't care about the resolution just use a temporary
@@ -156,7 +156,7 @@ CStdString CSkinInfo::GetSkinPath(const CStdString& strFile, RESOLUTION_INFO *re
   const RESOLUTION_INFO &target = g_graphicsContext.GetResInfo();
   *res = *std::min_element(m_resolutions.begin(), m_resolutions.end(), closestRes(target));
 
-  CStdString strPath = URIUtils::AddFileToFolder(strPathToUse, res->strMode);
+  std::string strPath = URIUtils::AddFileToFolder(strPathToUse, res->strMode);
   strPath = URIUtils::AddFileToFolder(strPath, strFile);
   if (CFile::Exists(strPath))
     return strPath;
@@ -169,7 +169,7 @@ CStdString CSkinInfo::GetSkinPath(const CStdString& strFile, RESOLUTION_INFO *re
   return strPath;
 }
 
-bool CSkinInfo::HasSkinFile(const CStdString &strFile) const
+bool CSkinInfo::HasSkinFile(const std::string &strFile) const
 {
   return CFile::Exists(GetSkinPath(strFile));
 }
@@ -181,7 +181,7 @@ double CSkinInfo::GetMinVersion()
 
 void CSkinInfo::LoadIncludes()
 {
-  CStdString includesPath = CSpecialProtocol::TranslatePathConvertCase(GetSkinPath("includes.xml"));
+  std::string includesPath = CSpecialProtocol::TranslatePathConvertCase(GetSkinPath("includes.xml"));
   CLog::Log(LOGINFO, "Loading skin includes from %s", includesPath.c_str());
   m_includes.ClearIncludes();
   m_includes.LoadIncludes(includesPath);
@@ -223,7 +223,7 @@ bool CSkinInfo::LoadStartupWindows(const cp_extension_t *ext)
   return true;
 }
 
-void CSkinInfo::GetSkinPaths(std::vector<CStdString> &paths) const
+void CSkinInfo::GetSkinPaths(std::vector<std::string> &paths) const
 {
   RESOLUTION_INFO res;
   GetSkinPath("Home.xml", &res);
@@ -233,19 +233,19 @@ void CSkinInfo::GetSkinPaths(std::vector<CStdString> &paths) const
     paths.push_back(URIUtils::AddFileToFolder(Path(), m_defaultRes.strMode));
 }
 
-bool CSkinInfo::TranslateResolution(const CStdString &name, RESOLUTION_INFO &res)
+bool CSkinInfo::TranslateResolution(const std::string &name, RESOLUTION_INFO &res)
 {
-  if (name.Equals("pal"))
+  if (name.compare("pal"))
     res = RESOLUTION_INFO(720, 576, 4.0f/3, "pal");
-  else if (name.Equals("pal16x9"))
+  else if (name.compare("pal16x9"))
     res = RESOLUTION_INFO(720, 576, 16.0f/9, "pal16x9");
-  else if (name.Equals("ntsc"))
+  else if (name.compare("ntsc"))
     res = RESOLUTION_INFO(720, 480, 4.0f/3, "ntsc");
-  else if (name.Equals("ntsc16x9"))
+  else if (name.compare("ntsc16x9"))
     res = RESOLUTION_INFO(720, 480, 16.0f/9, "ntsc16x9");
-  else if (name.Equals("720p"))
+  else if (name.compare("720p"))
     res = RESOLUTION_INFO(1280, 720, 0, "720p");
-  else if (name.Equals("1080i"))
+  else if (name.compare("1080i"))
     res = RESOLUTION_INFO(1920, 1080, 0, "1080i");
   else
     return false;
@@ -266,7 +266,7 @@ bool CSkinInfo::IsInUse() const
   return g_guiSettings.GetString("lookandfeel.skin") == ID();
 }
 
-const INFO::CSkinVariableString* CSkinInfo::CreateSkinVariable(const CStdString& name, int context)
+const INFO::CSkinVariableString* CSkinInfo::CreateSkinVariable(const std::string& name, int context)
 {
   return m_includes.CreateSkinVariable(name, context);
 }

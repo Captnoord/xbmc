@@ -304,6 +304,68 @@ int StringUtils::SplitString(const CStdString& input, const CStdString& delimite
   return results.size();
 }
 
+int StringUtils::SplitString(const std::string& input, const std::string& delimiter, std::vector<std::string> &results, unsigned int iMaxStrings /* = 0 */)
+{
+  int iPos = -1;
+  int newPos = -1;
+  int sizeS2 = delimiter.length();
+  int isize = input.length();
+
+  std::vector<unsigned int> positions;
+
+  results.clear();
+
+  newPos = input.find (delimiter, 0);
+
+  if ( newPos == std::string::npos )
+  {
+    results.push_back(input);
+    return 1;
+  }
+
+  while ( newPos > iPos && newPos != std::string::npos )
+  {
+    positions.push_back(newPos);
+    iPos = newPos;
+    newPos = input.find (delimiter, iPos + sizeS2);
+  }
+
+  // numFound is the number of delimiters which is one less
+  // than the number of substrings
+  unsigned int numFound = positions.size();
+  if (iMaxStrings > 0 && numFound >= iMaxStrings)
+    numFound = iMaxStrings - 1;
+
+  for ( unsigned int i = 0; i <= numFound; i++ )
+  {
+    std::string s;
+    if ( i == 0 )
+    {
+      if ( i == numFound )
+        s = input;
+      else
+        s = input.substr( i, positions[i] );
+    }
+    else
+    {
+      int offset = positions[i - 1] + sizeS2;
+      if ( offset < isize )
+      {
+        if ( i == numFound )
+          s = input.substr(offset, input.length() - offset);
+        else if ( i > 0 )
+          s = input.substr(
+            positions[i - 1] + sizeS2,
+            positions[i] - positions[i - 1] - sizeS2
+          );
+      }
+    }
+    results.push_back(s);
+  }
+  // return the number of substrings
+  return results.size();
+}
+
 CStdStringArray StringUtils::SplitString(const CStdString& input, const CStdString& delimiter, unsigned int iMaxStrings /* = 0 */)
 {
   CStdStringArray result;
